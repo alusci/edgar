@@ -1,0 +1,19 @@
+{
+    "title": "The Stone Giants Heroon",
+    "genre": "Historical Novel / Adventure",
+    "main_characters": [
+        {"name": "Sardus", "description": "He is the main character of the story. He is the tribe's leader. His leadership is firm but compassionate. He is brave and spiritual. He is also a great warrior."},
+        {"name": "Gavino", "description": "He is a shepherd. He spends his days attending his herd. He enjoys playing his bag pipes and story telling. He is generous and loyal."},
+        {"name": "Emina", "description": "She is Sardus' secret lover. She is beautiful and wise. She lives in Sardus' circle but she cannot marry him because she is already married to another prominent warrior (Elia)"},
+        {"name": "Elia", "description": "He is Emina's husband. He is jealous and possessive. He doesn't like Sardus' authority and is constantly trying to bring him down."},
+        {"name": "Mira", "description": "She is Sardus's wife. A prominent figure in the tribe, she forgives her husband's infidelity for the stability of the tribe. She is very smart and proud. She loves her island and she is secretly a formidable warrior."},
+        {"name": "Hanno", "description": "He is the leader of the invading tribe. He is cunning and ruthless. He manages to turn Elia against Sardus"},
+        {"name": "Hamilcar", "description": "He is the greatest warrior in Hanno's army. He is renown for his dexterity and strength. He is more compassionate then Hanno and sometimes refuses to commit brutalities in his name."}
+    ],
+    "introduction": {
+        "facts": "Island of Sardinia, 2700 years ago: in the Sinis peninsula, in the course of various generations, late nuragic communities build and extraordinary monument, an alignment of dozens and dozens of statues around 2 meters tall, a Heroon celebrating their own political and religious groups. The statues include warriors, archers, boxers, and shamans.",
+        "site_note": "",
+        "outcome": "At a certain point this site has been violently destroyed and it disappeared from history. It is not known how and why this happened with certainty. The most accredited theory is that some \"invaders\" had a big fight with the locals and they ended up destroying the site to celebrate their victory and assert their domination over the local populations."
+    },
+    "story_beginning": "The locals (Sardus, Gavino, Emina, Elia, Mira) are living their usual lives. They essentially perform rituals, hunt, argue, eat, throw parties, argue etc... At certain point, the shepherd Gavino spots a menacing army approaching the village. He informs Sardus and the Sardinians get ready to fight back the invaders."
+}
