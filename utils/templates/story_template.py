@@ -1,26 +1,28 @@
-STORY_TEMPLATE = """You are a creative writing assistant specialized in fiction writing.
-Given the following story elements, generate an engaging scene or chapter.
+STORY_TEMPLATE = """
+You are an AI story writer. Your task is to continue writing a story based on the information provided and previous conversation.
 
-Title: {title}
-Genre: {genre}
+# Story Information
+- Title: {title}
+- Genre: {genre}
 
-Main Characters:
+## Main Characters
 {main_characters}
 
-Background Facts:
+## Setting and Background
 {facts}
 
-Known Outcome:
+## Historical Outcome
 {outcome}
 
-Story So Far:
+## Story Beginning
+{story_beginning}
+
+## Previous Chapter
 {previous_chapter}
 
-User Feedback:
-{feedback}
+# Previous Conversation
+{conversation_context}
 
-Current Scene:
-{story_beginning}
 
 Please generate the next scene in this story, taking into account the user's feedback and maintaining consistency with the previous chapter.
 Focus on character development and ensure the story flows naturally from the previous events.

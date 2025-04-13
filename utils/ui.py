@@ -11,41 +11,41 @@ class StoryGeneratorUI:
         self.chapter_number = 1
         self.current_chapter = ""
 
-    def load_story_data(self, file_obj):
-        if file_obj is None:
-            return "Please upload a JSON file", None
-        
+    def create_story_data(self, title, genre, facts, outcome, story_beginning, characters_json):
         try:
-            # With newer Gradio versions, file_obj is the file path
-            if isinstance(file_obj, str):
-                with open(file_obj, 'r') as f:
-                    self.story_data = json.load(f)
-            else:
-                # Try to handle it as a file-like object (older approach)
-                try:
-                    content = file_obj.read().decode('utf-8')
-                    self.story_data = json.loads(content)
-                except AttributeError:
-                    # For newer Gradio versions that return file path as tempfile
-                    with open(file_obj.name, 'r') as f:
-                        self.story_data = json.load(f)
+            # Try to parse characters JSON input
+            main_characters = json.loads(characters_json)
+            
+            # Create story data structure
+            self.story_data = {
+                "title": title,
+                "genre": genre,
+                "main_characters": main_characters,
+                "introduction": {
+                    "facts": facts,
+                    "site_note": "",
+                    "outcome": outcome
+                },
+                "story_beginning": story_beginning
+            }
             
             self.story_context = []
             self.chapter_number = 1
             self.current_chapter = ""
-            return f"Story data loaded: {self.story_data['title']}", None
+            
+            return f"Story data created: {self.story_data['title']}", None
         except Exception as e:
-            return f"Error loading story data: {str(e)}", None
+            return f"Error creating story data: {str(e)}", None
 
     def generate_chapter(self, feedback=""):
         if self.story_data is None:
-            return "Please load story data first", None
+            return "Please create story data first", None
         
         try:
             # Get the previous chapter from the story context
             previous_chapter = self.story_context[-1] if self.story_context else ""
             
-            # Generate the chapter
+            # Generate the chapter using the feedback and conversation history
             self.current_chapter = self.app.generate_story(
                 self.story_data, 
                 feedback=feedback,
@@ -59,14 +59,14 @@ class StoryGeneratorUI:
 
     def accept_chapter(self):
         if not self.current_chapter:
-            return "No chapter to accept", None, ""  # Return empty string as third return value to clear feedback
+            return "No chapter to accept", None, ""
         
         self.story_context.append(self.current_chapter)
         self.chapter_number += 1
         prev_chapter = self.current_chapter
         self.current_chapter = ""
         
-        return f"Chapter accepted. Ready to generate Chapter {self.chapter_number}", None, ""  # Return empty string to clear feedback
+        return f"Chapter accepted. Ready to generate Chapter {self.chapter_number}", None, ""
 
     def save_story(self, file_name):
         if not self.story_context:
@@ -85,8 +85,27 @@ class StoryGeneratorUI:
                 f.write(chapter)
                 f.write("\n\n")
         
-        return f"Story saved to {output_file}", None
-    
+        # Also save the story data as JSON
+        data_file = f"data/inputs/{file_name}.json"
+        with open(data_file, "w") as f:
+            json.dump(self.story_data, f, indent=4)
+            
+        return f"Story saved to {output_file} and data saved to {data_file}", None
+
+    def load_example_data(self):
+        with open("data/inputs/stone_giant_heroons.json", "r") as f:
+            example_data = json.load(f)
+            
+        characters_json = json.dumps(example_data["main_characters"], indent=2)
+        
+        return (
+            example_data["title"],
+            example_data["genre"],
+            example_data["introduction"]["facts"],
+            example_data["introduction"]["outcome"],
+            example_data["story_beginning"],
+            characters_json
+        )
 
 def ui_main():
     ui = StoryGeneratorUI()
@@ -94,45 +113,110 @@ def ui_main():
     with gr.Blocks(title="EDGAR - Story Generator") as demo:
         gr.Markdown("# EDGAR - AI Story Generator")
         
-        with gr.Row():
-            with gr.Column(scale=1):
-                file_input = gr.File(
-                    label="1. Select Story Data (JSON)",
-                    file_types=[".json"],
-                    type="filepath"  # Explicitly set to return filepath
-                )
-                load_btn = gr.Button("Load Story Data")
-                status = gr.Textbox(label="Status", interactive=False)
+        with gr.Tabs():
+            with gr.TabItem("1. Story Setup"):
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        gr.Markdown("### Basic Story Information")
+                        title_input = gr.Textbox(label="Title", placeholder="Enter story title")
+                        genre_input = gr.Textbox(label="Genre", placeholder="Enter story genre")
+                        
+                        gr.Markdown("### Introduction")
+                        facts_input = gr.Textbox(
+                            label="Historical Facts", 
+                            placeholder="Enter historical facts about the setting",
+                            lines=5
+                        )
+                        outcome_input = gr.Textbox(
+                            label="Historical Outcome", 
+                            placeholder="Enter how the historical events ended",
+                            lines=5
+                        )
+                        
+                        story_beginning_input = gr.Textbox(
+                            label="Story Beginning", 
+                            placeholder="Enter how your story begins",
+                            lines=5
+                        )
+                        
+                    with gr.Column(scale=1):
+                        gr.Markdown("### Main Characters")
+                        gr.Markdown("""
+                        Enter characters in JSON format:
+                        ```json
+                        [
+                          {"name": "Character1", "description": "Description1"},
+                          {"name": "Character2", "description": "Description2"}
+                        ]
+                        ```
+                        """)
+                        characters_input = gr.Code(
+                            label="Characters JSON",
+                            language="json",
+                            lines=20,
+                            value="[]"
+                        )
+                        
+                        load_example_btn = gr.Button("Load Example Data")
+                        create_btn = gr.Button("Create Story Data")
+                        status = gr.Textbox(label="Status", interactive=False)
                 
-                with gr.Group():  # Changed from gr.Box() to gr.Group()
-                    gr.Markdown("### Generation Controls")
-                    feedback_input = gr.Textbox(
-                        label="Feedback for regeneration (optional)",
-                        placeholder="Enter feedback to guide the story generation",
-                        lines=3
-                    )
-                    generate_btn = gr.Button("2. Generate Chapter")
-                    accept_btn = gr.Button("3. Accept Chapter & Continue")
-                
-                with gr.Group():  # Changed from gr.Box() to gr.Group()
-                    gr.Markdown("### Save Story")
-                    file_name_input = gr.Textbox(
-                        label="File Name (optional)",
-                        placeholder="Enter a file name for the story (without extension)"
-                    )
-                    save_btn = gr.Button("4. Save Story")
-            
-            with gr.Column(scale=2):
-                chapter_output = gr.Markdown(
-                    value="Generated chapter will appear here. Start by loading a story data file."
-                )
+            with gr.TabItem("2. Story Generation"):
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        with gr.Group():
+                            gr.Markdown("### Generation Controls")
+                            feedback_input = gr.Textbox(
+                                label="Feedback for regeneration (optional)",
+                                placeholder="Enter feedback to guide the story generation",
+                                lines=3
+                            )
+                            generate_btn = gr.Button("Generate Chapter")
+                            accept_btn = gr.Button("Accept Chapter & Continue")
+                        
+                        with gr.Group():
+                            gr.Markdown("### Save Story")
+                            file_name_input = gr.Textbox(
+                                label="File Name (optional)",
+                                placeholder="Enter a file name for the story (without extension)"
+                            )
+                            save_btn = gr.Button("Save Story")
+                    
+                    with gr.Column(scale=2):
+                        generation_status = gr.Textbox(label="Generation Status", interactive=False)
+                        chapter_output = gr.Markdown(
+                            value="Generated chapter will appear here. Start by creating story data."
+                        )
         
         # Event handlers
-        load_btn.click(fn=ui.load_story_data, inputs=[file_input], outputs=[status, chapter_output])
-        generate_btn.click(fn=ui.generate_chapter, inputs=[feedback_input], outputs=[status, chapter_output])
-        accept_btn.click(fn=ui.accept_chapter, inputs=[], outputs=[status, chapter_output, feedback_input])  # Add feedback_input as output
-        save_btn.click(fn=ui.save_story, inputs=[file_name_input], outputs=[status, chapter_output])
+        load_example_btn.click(
+            fn=ui.load_example_data, 
+            inputs=[], 
+            outputs=[title_input, genre_input, facts_input, outcome_input, story_beginning_input, characters_input]
+        )
+        
+        create_btn.click(
+            fn=ui.create_story_data, 
+            inputs=[title_input, genre_input, facts_input, outcome_input, story_beginning_input, characters_input],
+            outputs=[status, chapter_output]
+        )
+        
+        generate_btn.click(
+            fn=ui.generate_chapter, 
+            inputs=[feedback_input], 
+            outputs=[generation_status, chapter_output]
+        )
+        
+        accept_btn.click(
+            fn=ui.accept_chapter, 
+            inputs=[], 
+            outputs=[generation_status, chapter_output, feedback_input]
+        )
+        
+        save_btn.click(
+            fn=ui.save_story, 
+            inputs=[file_name_input], 
+            outputs=[generation_status, chapter_output]
+        )
     
     demo.launch(share=False)
-
-    
