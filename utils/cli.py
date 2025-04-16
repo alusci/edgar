@@ -2,10 +2,22 @@ import json
 import os
 from utils.story_generator import ChatApplication
 
-def cli_main():
+def cli_main(input_file="data/inputs/stone_giant_heroons.json"):
     # Load the story data
-    with open("data/inputs/stone_giant_heroons.json", "r") as f:
-        story_data = json.load(f)
+    try:
+        with open(input_file, "r") as f:
+            story_data = json.load(f)
+            print(f"Loaded story data from: {input_file}")
+    except FileNotFoundError:
+        print(f"Error: Input file '{input_file}' not found.")
+        return
+    except json.JSONDecodeError:
+        print(f"Error: Input file '{input_file}' is not valid JSON.")
+        return
+    
+    print(f"Story: {story_data['title']}")
+    print(f"Genre: {story_data['genre']}")
+    print(f"Main characters: {len(story_data['main_characters'])}")
     
     # Initialize the chat application
     app = ChatApplication()
@@ -71,3 +83,6 @@ def cli_main():
             
             print(f"\nStory saved to {output_file}")
             break
+
+if __name__ == "__main__":
+    cli_main()
