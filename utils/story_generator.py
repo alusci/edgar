@@ -1,6 +1,7 @@
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
-from langchain.chains import LLMChain
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 from dotenv import load_dotenv
 import os
 
@@ -32,11 +33,12 @@ class ChatApplication:
         # Create the prompt template
         self.prompt = ChatPromptTemplate.from_template(self.template)
         
-        # Create the chain
-        self.chain = LLMChain(
-            llm=self.llm,
-            prompt=self.prompt,
-            verbose=True
+        # Create the chain using the new approach
+        self.chain = (
+            RunnablePassthrough() 
+            | self.prompt 
+            | self.llm 
+            | StrOutputParser()
         )
         
         # Initialize conversation history
@@ -86,8 +88,8 @@ class ChatApplication:
             "previous_chapter": previous_chapter
         }
         
-        # Generate the story
-        response = self.chain.run(input_data)
+        # Generate the story using the new chain approach
+        response = self.chain.invoke(input_data)
         
         # Add LLM response to conversation history
         chatbot_response = f"ChatBot: {response}"
@@ -97,3 +99,8 @@ class ChatApplication:
         self._trim_history()
         
         return response
+        
+    def clear_history(self):
+        """Clear the conversation history"""
+        self.conversation_history = []
+        return True
