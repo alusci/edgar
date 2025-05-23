@@ -67,7 +67,7 @@ class ChatApplication:
         
         # If feedback is provided, treat it as a new human input
         if feedback:
-            human_input = f"H: {feedback}"
+            human_input = f"Human: {feedback}"
             # Add human feedback to conversation history
             self.conversation_history.append(human_input)
         

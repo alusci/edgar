@@ -3,6 +3,7 @@ import os
 import gradio as gr
 from utils.story_generator import ChatApplication
 
+
 class StoryGeneratorUI:
     def __init__(self):
         self.app = ChatApplication()
@@ -37,6 +38,7 @@ class StoryGeneratorUI:
         except Exception as e:
             return f"Error creating story data: {str(e)}", None
 
+
     def generate_chapter(self, feedback=""):
         if self.story_data is None:
             return "Please create story data first", None
@@ -57,6 +59,7 @@ class StoryGeneratorUI:
         except Exception as e:
             return f"Error generating chapter: {str(e)}", None
 
+
     def accept_chapter(self):
         if not self.current_chapter:
             return "No chapter to accept", None, ""
@@ -67,6 +70,7 @@ class StoryGeneratorUI:
         self.current_chapter = ""
         
         return f"Chapter accepted. Ready to generate Chapter {self.chapter_number}", None, ""
+
 
     def save_story(self, file_name):
         if not self.story_context:
@@ -92,6 +96,48 @@ class StoryGeneratorUI:
             
         return f"Story saved to {output_file} and data saved to {data_file}", None
 
+
+    def download_story(self, file_name):
+        """Create downloadable story files for the user"""
+        if not self.story_context:
+            return "No story to download", None, None
+        
+        if not file_name:
+            file_name = self.story_data['title'].lower().replace(' ', '_')
+        
+        # Create story content
+        story_content = f"# {self.story_data['title']}\n\n"
+        for i, chapter in enumerate(self.story_context, 1):
+            story_content += f"\n## Chapter {i}\n\n"
+            story_content += chapter
+            story_content += "\n\n"
+        
+        # Create JSON content
+        json_content = json.dumps(self.story_data, indent=4)
+        
+        # Create temporary directory and files with proper names
+        import tempfile
+        import os
+        
+        # Create a temporary directory
+        temp_dir = tempfile.mkdtemp()
+        
+        # Create files with proper names
+        text_file_path = os.path.join(temp_dir, f"{file_name}.txt")
+        json_file_path = os.path.join(temp_dir, f"{file_name}.json")
+        
+        # Write story content to text file
+        with open(text_file_path, 'w', encoding='utf-8') as f:
+            f.write(story_content)
+        
+        # Write JSON content to JSON file
+        with open(json_file_path, 'w', encoding='utf-8') as f:
+            f.write(json_content)
+    
+        # Return both files for download
+        return f"Story '{self.story_data['title']}' is ready for download", text_file_path, json_file_path
+
+
     def load_example_data(self):
         with open("data/inputs/stone_giant_heroons.json", "r") as f:
             example_data = json.load(f)
@@ -106,6 +152,7 @@ class StoryGeneratorUI:
             example_data["story_beginning"],
             characters_json
         )
+
 
 def ui_main():
     ui = StoryGeneratorUI()
@@ -175,12 +222,14 @@ def ui_main():
                             accept_btn = gr.Button("Accept Chapter & Continue")
                         
                         with gr.Group():
-                            gr.Markdown("### Save Story")
+                            gr.Markdown("### Download Story")
                             file_name_input = gr.Textbox(
                                 label="File Name (optional)",
                                 placeholder="Enter a file name for the story (without extension)"
                             )
-                            save_btn = gr.Button("Save Story")
+                            download_btn = gr.Button("Download Story")
+                            story_file = gr.File(label="Story Text (click to download)", visible=False, interactive=True)
+                            data_file = gr.File(label="Story Data JSON (click to download)", visible=False, interactive=True)
                     
                     with gr.Column(scale=2):
                         generation_status = gr.Textbox(label="Generation Status", interactive=False)
@@ -213,10 +262,14 @@ def ui_main():
             outputs=[generation_status, chapter_output, feedback_input]
         )
         
-        save_btn.click(
-            fn=ui.save_story, 
-            inputs=[file_name_input], 
-            outputs=[generation_status, chapter_output]
+        download_btn.click(
+            fn=ui.download_story,
+            inputs=[file_name_input],
+            outputs=[generation_status, story_file, data_file]
+        ).then(
+            fn=lambda: (gr.update(visible=True), gr.update(visible=True)),
+            inputs=[],
+            outputs=[story_file, data_file]
         )
     
     demo.launch(share=False)
