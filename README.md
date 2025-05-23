@@ -49,10 +49,10 @@ conda activate story-gen
 ### Command Line Interface
 ```bash
 # Use default story data
-python main.py
+python main.py --cli
 
 # Specify custom story data
-python main.py --input path/to/your/story.json
+python main.py --cli --input path/to/your/story.json
 ```
 This will launch the interactive command-line interface where you can:
 - Generate chapters one by one
@@ -61,7 +61,7 @@ This will launch the interactive command-line interface where you can:
 
 ### Graphical User Interface
 ```bash
-python main.py --ui
+python main.py
 ```
 This will launch a web-based Gradio interface where you can:
 - Upload JSON story data
